@@ -1,0 +1,81 @@
+// This is your Prisma schema file
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Session {
+  id          String       @id @default(cuid())
+  userId      String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  documents   Document[]
+  agents      Agent[]
+  transcripts Transcript[]
+
+  @@index([createdAt])
+}
+
+model Document {
+  id        String            @id @default(cuid())
+  sessionId String
+  session   Session           @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  title     String
+  content   String            @db.Text
+  type      String            // "prd", "spec", "ideas", "custom"
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+  versions  DocumentVersion[]
+
+  @@index([sessionId])
+  @@index([createdAt])
+}
+
+model DocumentVersion {
+  id         String   @id @default(cuid())
+  documentId String
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  version    Int
+  content    String   @db.Text
+  createdAt  DateTime @default(now())
+  trigger    String   // "auto", "manual", "milestone"
+  metadata   Json?    // agentId, context, description
+
+  @@unique([documentId, version])
+  @@index([documentId])
+  @@index([createdAt])
+}
+
+model Agent {
+  id        String   @id @default(cuid())
+  sessionId String
+  session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  type      String   // "discussion", "document", "research"
+  status    String   // "idle", "thinking", "working", "complete", "error"
+  config    Json     // AI model, voice settings, etc.
+  findings  String?  @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sessionId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model Transcript {
+  id        String   @id @default(cuid())
+  sessionId String
+  session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  speaker   String   // "user", "agent"
+  text      String   @db.Text
+  isFinal   Boolean  @default(true)
+  timestamp DateTime @default(now())
+
+  @@index([sessionId])
+  @@index([timestamp])
+}

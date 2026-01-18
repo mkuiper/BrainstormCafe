@@ -1,0 +1,37 @@
+{
+  "name": "brainstorm-cafe",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AI-powered brainstorming workspace with voice interaction and document collaboration",
+  "scripts": {
+    "dev": "pnpm --parallel --stream run dev",
+    "dev:web": "pnpm --filter web dev",
+    "dev:server": "pnpm --filter server dev",
+    "build": "pnpm --recursive run build",
+    "build:web": "pnpm --filter web build",
+    "build:server": "pnpm --filter server build",
+    "start:web": "pnpm --filter web start",
+    "start:server": "pnpm --filter server start",
+    "lint": "pnpm --recursive run lint",
+    "type-check": "pnpm --recursive run type-check",
+    "clean": "pnpm --recursive run clean && rm -rf node_modules",
+    "db:migrate": "pnpm --filter server db:migrate",
+    "db:studio": "pnpm --filter server db:studio",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "keywords": [
+    "ai",
+    "brainstorming",
+    "voice",
+    "collaboration",
+    "documents",
+    "agents"
+  ],
+  "author": "",
+  "license": "MIT"
+}
