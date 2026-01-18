@@ -55,6 +55,10 @@ export class GeminiLiveAdapter implements VoiceServiceAdapter {
 
           // Send setup configuration
           const voiceName = config.settings?.voiceId || 'Puck';
+          const persona = config.settings?.persona;
+          const personaLine = persona
+            ? `Tone: ${persona.tone}. Depth: ${persona.depth}. Mode: ${persona.mode}.`
+            : 'Tone: balanced. Depth: standard. Mode: hybrid.';
           const setupMessage = {
             setup: {
               model: `models/${this.modelName}`,
@@ -72,7 +76,7 @@ export class GeminiLiveAdapter implements VoiceServiceAdapter {
               output_audio_transcription: {},
               system_instruction: {
                 parts: [{
-                  text: 'You are a helpful AI assistant in a brainstorming session called BrainStorm Cafe. Be concise, creative, and conversational. Keep your responses brief and natural since they will be spoken aloud.',
+                  text: `You are a helpful AI assistant in a brainstorming session called BrainStorm Cafe. Be concise, creative, and conversational. Keep your responses brief and natural since they will be spoken aloud. ${personaLine}`,
                 }],
               },
             },

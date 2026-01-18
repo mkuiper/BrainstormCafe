@@ -3,16 +3,17 @@
 import VoiceControl from '../voice/VoiceControl';
 import TranscriptDisplay from '../voice/TranscriptDisplay';
 import { VoiceSessionHook } from '@/hooks/useVoiceSession';
-import { VoiceProvider } from '@brainstorm-cafe/shared';
+import { PersonaSettings, VoiceProvider } from '@brainstorm-cafe/shared';
 import { GeminiVoiceName } from '../voice/GeminiVoiceSelector';
 
 interface DiscussionPanelProps {
   provider: VoiceProvider;
   geminiVoice: GeminiVoiceName;
+  persona: PersonaSettings;
   voiceSession: VoiceSessionHook;
 }
 
-export default function DiscussionPanel({ provider, geminiVoice, voiceSession }: DiscussionPanelProps) {
+export default function DiscussionPanel({ provider, geminiVoice, persona, voiceSession }: DiscussionPanelProps) {
   return (
     <div className="flex h-full flex-col">
       <div className="border-b border-border p-4">
@@ -26,7 +27,12 @@ export default function DiscussionPanel({ provider, geminiVoice, voiceSession }:
 
         {/* Voice Controls */}
         <div className="mb-4">
-          <VoiceControl provider={provider} geminiVoice={geminiVoice} voiceSession={voiceSession} />
+          <VoiceControl
+            provider={provider}
+            geminiVoice={geminiVoice}
+            persona={persona}
+            voiceSession={voiceSession}
+          />
         </div>
 
         {/* Research Agents */}

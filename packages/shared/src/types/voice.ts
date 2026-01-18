@@ -1,5 +1,15 @@
 export type VoiceProvider = 'openai' | 'openai-whisper' | 'elevenlabs' | 'webspeech' | 'gemini';
 
+export type PersonaTone = 'casual' | 'balanced' | 'formal';
+export type PersonaDepth = 'brief' | 'standard' | 'exhaustive';
+export type PersonaMode = 'analytical' | 'hybrid' | 'lateral';
+
+export interface PersonaSettings {
+  tone: PersonaTone;
+  depth: PersonaDepth;
+  mode: PersonaMode;
+}
+
 export interface VoiceConfig {
   provider: VoiceProvider;
   settings?: VoiceSettings;
@@ -11,6 +21,7 @@ export interface VoiceSettings {
   language?: string;
   voiceId?: string;
   model?: string;
+  persona?: PersonaSettings;
 }
 
 export interface VoiceSession {

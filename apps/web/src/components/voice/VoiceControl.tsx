@@ -2,17 +2,18 @@
 
 import { Mic, MicOff, StopCircle, AlertCircle } from 'lucide-react';
 import { VoiceSessionHook } from '@/hooks/useVoiceSession';
-import { VoiceProvider } from '@brainstorm-cafe/shared';
+import { PersonaSettings, VoiceProvider } from '@brainstorm-cafe/shared';
 import { useState, useEffect, useRef } from 'react';
 import { WebSpeechClient } from '@/lib/webSpeechClient';
 
 interface VoiceControlProps {
   provider: VoiceProvider;
   geminiVoice: string;
+  persona: PersonaSettings;
   voiceSession: VoiceSessionHook;
 }
 
-export default function VoiceControl({ provider, geminiVoice, voiceSession }: VoiceControlProps) {
+export default function VoiceControl({ provider, geminiVoice, persona, voiceSession }: VoiceControlProps) {
   const { isActive, startSession, stopSession, interrupt, sendAudio, addTranscript } = voiceSession;
   const [isRecording, setIsRecording] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -136,7 +137,7 @@ export default function VoiceControl({ provider, geminiVoice, voiceSession }: Vo
       }
 
       if (provider === 'gemini') {
-        startSession(provider, { provider, settings: { voiceId: geminiVoice } });
+        startSession(provider, { provider, settings: { voiceId: geminiVoice, persona } });
         await startGeminiInput();
         setIsRecording(true);
         return;

@@ -6,7 +6,7 @@ import DiscussionPanel from '@/components/panels/DiscussionPanel';
 import DocumentPanel from '@/components/panels/DocumentPanel';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { useVoiceSession } from '@/hooks/useVoiceSession';
-import { VoiceProvider } from '@brainstorm-cafe/shared';
+import { PersonaSettings, VoiceProvider } from '@brainstorm-cafe/shared';
 import { GeminiVoiceName } from '@/components/voice/GeminiVoiceSelector';
 
 export default function Home() {
@@ -14,6 +14,11 @@ export default function Home() {
   const voiceSession = useVoiceSession();
   const [selectedProvider, setSelectedProvider] = useState<VoiceProvider>('openai-whisper');
   const [selectedGeminiVoice, setSelectedGeminiVoice] = useState<GeminiVoiceName>('Puck');
+  const [persona, setPersona] = useState<PersonaSettings>({
+    tone: 'balanced',
+    depth: 'standard',
+    mode: 'hybrid',
+  });
 
   return (
     <main className="h-screen w-screen overflow-hidden bg-background">
@@ -30,6 +35,8 @@ export default function Home() {
             onProviderChange={setSelectedProvider}
             selectedGeminiVoice={selectedGeminiVoice}
             onGeminiVoiceChange={setSelectedGeminiVoice}
+            persona={persona}
+            onPersonaChange={setPersona}
           />
         </div>
 
@@ -38,6 +45,7 @@ export default function Home() {
           <DiscussionPanel
             provider={selectedProvider}
             geminiVoice={selectedGeminiVoice}
+            persona={persona}
             voiceSession={voiceSession}
           />
         </div>

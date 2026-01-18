@@ -2,13 +2,16 @@
 
 import VoiceServiceSelector from '../voice/VoiceServiceSelector';
 import GeminiVoiceSelector, { GeminiVoiceName } from '../voice/GeminiVoiceSelector';
-import { VoiceProvider } from '@brainstorm-cafe/shared';
+import PersonaSelector from '../voice/PersonaSelector';
+import { PersonaSettings, VoiceProvider } from '@brainstorm-cafe/shared';
 
 interface ConfigPanelProps {
   selectedProvider: VoiceProvider;
   onProviderChange: (provider: VoiceProvider) => void;
   selectedGeminiVoice: GeminiVoiceName;
   onGeminiVoiceChange: (voice: GeminiVoiceName) => void;
+  persona: PersonaSettings;
+  onPersonaChange: (persona: PersonaSettings) => void;
 }
 
 export default function ConfigPanel({
@@ -16,6 +19,8 @@ export default function ConfigPanel({
   onProviderChange,
   selectedGeminiVoice,
   onGeminiVoiceChange,
+  persona,
+  onPersonaChange,
 }: ConfigPanelProps) {
   return (
     <div className="flex h-full flex-col">
@@ -34,6 +39,7 @@ export default function ConfigPanel({
           {selectedProvider === 'gemini' && (
             <GeminiVoiceSelector selected={selectedGeminiVoice} onChange={onGeminiVoiceChange} />
           )}
+          <PersonaSelector value={persona} onChange={onPersonaChange} />
 
           {/* AI Model Section */}
           <div>
