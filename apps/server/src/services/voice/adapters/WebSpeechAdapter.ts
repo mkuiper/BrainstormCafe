@@ -1,4 +1,5 @@
 import { VoiceServiceAdapter, VoiceConfig, VoiceSession } from '@brainstorm-cafe/shared';
+import { aiService } from '../../AIService';
 
 /**
  * WebSpeechAdapter - Browser-based voice recognition and synthesis
@@ -76,6 +77,29 @@ export class WebSpeechAdapter implements VoiceServiceAdapter {
 
   getSession(): VoiceSession | null {
     return this.session;
+  }
+
+  // Handle transcript received from client
+  async handleUserTranscript(sessionId: string, text: string, isFinal: boolean): Promise<void> {
+    if (!this.session || this.session.status !== 'active') return;
+
+    // Emit user transcript to other listeners (like database saving in voiceHandler)
+    if (this.transcriptCallback) {
+      this.transcriptCallback(text, isFinal, 'user');
+    }
+
+    // If it's a final transcript, trigger AI response
+    if (isFinal) {
+      try {
+        const responseText = await aiService.generateResponse(sessionId);
+
+        if (this.transcriptCallback) {
+          this.transcriptCallback(responseText, true, 'agent');
+        }
+      } catch (error) {
+        console.error('Error generating AI response for WebSpeech:', error);
+      }
+    }
   }
 
   // Helper method to emit transcript (called by WebSocket handler when browser sends transcript)

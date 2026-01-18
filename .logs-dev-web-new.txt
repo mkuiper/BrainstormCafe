@@ -1,0 +1,40 @@
+
+> brainstorm-cafe@0.1.0 dev:web /home/mike/ClaudeProjects/BrainStormCafe
+> pnpm --filter web dev
+
+
+> web@0.1.0 dev /home/mike/ClaudeProjects/BrainStormCafe/apps/web
+> next dev
+
+  ▲ Next.js 14.2.35
+  - Local:        http://localhost:3000
+  - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 2.2s
+ ○ Compiling / ...
+ ✓ Compiled / in 5.1s (675 modules)
+ GET / 200 in 5378ms
+ ✓ Compiled in 328ms (324 modules)
+ GET / 200 in 31ms
+ GET / 200 in 42ms
+ GET / 200 in 30ms
+ GET / 200 in 30ms
+ GET / 200 in 26ms
+ ✓ Compiled in 508ms (652 modules)
+ ✓ Compiled in 508ms (666 modules)
+ ✓ Compiled in 258ms (666 modules)
+ ✓ Compiled in 747ms (666 modules)
+ GET / 200 in 155ms
+ ✓ Compiled in 640ms (666 modules)
+ ✓ Compiled in 211ms (666 modules)
+ ✓ Compiled in 648ms (666 modules)
+ GET / 200 in 201ms
+ ✓ Compiled in 632ms (666 modules)
+ ✓ Compiled in 377ms (666 modules)
+/home/mike/ClaudeProjects/BrainStormCafe/apps/web:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  web@0.1.0 dev: `next dev`
+Command failed with signal "SIGTERM"
+Terminated
+ ELIFECYCLE  Command failed with exit code 143.
+[?25h

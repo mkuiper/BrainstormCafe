@@ -4,10 +4,11 @@ import { Agent, AgentSpawnRequest } from './agent';
 
 // Client → Server Events
 export type ClientEvent =
-  | { type: 'voice.start'; payload: { provider: 'openai' | 'elevenlabs' | 'webspeech'; config: VoiceConfig } }
+  | { type: 'voice.start'; payload: { provider: 'openai' | 'openai-whisper' | 'elevenlabs' | 'webspeech' | 'gemini'; config: VoiceConfig } }
   | { type: 'voice.stop' }
   | { type: 'voice.interrupt' }
   | { type: 'voice.audio'; payload: { audio: ArrayBuffer } }
+  | { type: 'voice.transcript'; payload: { text: string; isFinal: boolean } }
   | { type: 'agent.spawn'; payload: AgentSpawnRequest }
   | { type: 'agent.inject'; payload: { agentId: string } }
   | { type: 'document.create'; payload: { title: string; type: string; template?: string } }

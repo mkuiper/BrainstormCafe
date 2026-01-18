@@ -10,6 +10,7 @@ import {
   handleVoiceStop,
   handleVoiceInterrupt,
   handleVoiceAudio,
+  handleVoiceTranscript,
   cleanupVoiceSession,
 } from './handlers/voiceHandler';
 
@@ -34,6 +35,9 @@ export function setupWebSocketHandlers(io: Server) {
           break;
         case 'voice.audio':
           handleVoiceAudio(socket, event);
+          break;
+        case 'voice.transcript':
+          handleVoiceTranscript(socket, event);
           break;
         case 'agent.spawn':
           handleAgentSpawn(socket, event);

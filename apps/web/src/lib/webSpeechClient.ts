@@ -7,6 +7,7 @@ export class WebSpeechClient {
   private recognition: any = null;
   private synthesis: SpeechSynthesis | null = null;
   private onTranscriptCallback: ((text: string, isFinal: boolean) => void) | null = null;
+  private onErrorCallback: ((error: string) => void) | null = null;
   private isListening = false;
 
   constructor() {
@@ -24,9 +25,15 @@ export class WebSpeechClient {
   private setupRecognition() {
     if (!this.recognition) return;
 
+    // Configure recognition for better performance
     this.recognition.continuous = true;
     this.recognition.interimResults = true;
     this.recognition.lang = 'en-US';
+    this.recognition.maxAlternatives = 1;
+
+    this.recognition.onstart = () => {
+      console.log('[WebSpeechClient] Recognition started');
+    };
 
     this.recognition.onresult = (event: any) => {
       console.log('[WebSpeechClient] onresult fired, results:', event.results.length);
@@ -35,17 +42,29 @@ export class WebSpeechClient {
         const isFinal = event.results[i].isFinal;
         console.log('[WebSpeechClient] Transcript:', transcript, 'isFinal:', isFinal);
 
-        if (this.onTranscriptCallback) {
+        if (this.onTranscriptCallback && transcript.trim()) {
           console.log('[WebSpeechClient] Calling transcript callback');
           this.onTranscriptCallback(transcript, isFinal);
-        } else {
-          console.warn('[WebSpeechClient] No transcript callback set!');
         }
       }
     };
 
     this.recognition.onerror = (event: any) => {
       console.error('[WebSpeechClient] Speech recognition error:', event.error);
+
+      // Handle specific errors
+      if (event.error === 'no-speech') {
+        console.log('[WebSpeechClient] No speech detected, continuing...');
+        // Don't report as error, just continue
+        return;
+      }
+
+      if (event.error === 'aborted') {
+        console.log('[WebSpeechClient] Recognition aborted');
+        return;
+      }
+
+      this.onErrorCallback?.(event.error);
     };
 
     this.recognition.onend = () => {
@@ -53,7 +72,15 @@ export class WebSpeechClient {
       // Restart if still supposed to be listening
       if (this.isListening) {
         console.log('[WebSpeechClient] Restarting recognition...');
-        this.recognition.start();
+        try {
+          setTimeout(() => {
+            if (this.isListening) {
+              this.recognition.start();
+            }
+          }, 100); // Small delay to prevent rapid restarts
+        } catch (error) {
+          console.error('[WebSpeechClient] Error restarting:', error);
+        }
       }
     };
   }
@@ -99,6 +126,10 @@ export class WebSpeechClient {
 
   onTranscript(callback: (text: string, isFinal: boolean) => void) {
     this.onTranscriptCallback = callback;
+  }
+
+  onError(callback: (error: string) => void) {
+    this.onErrorCallback = callback;
   }
 
   speak(text: string): Promise<void> {

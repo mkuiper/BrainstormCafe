@@ -2,6 +2,8 @@ import { VoiceServiceAdapter, VoiceProvider } from '@brainstorm-cafe/shared';
 import { OpenAIRealtimeAdapter } from './adapters/OpenAIRealtimeAdapter';
 import { ElevenLabsAdapter } from './adapters/ElevenLabsAdapter';
 import { WebSpeechAdapter } from './adapters/WebSpeechAdapter';
+import { OpenAIWhisperAdapter } from './adapters/OpenAIWhisperAdapter';
+import { GeminiLiveAdapter } from './adapters/GeminiLiveAdapter';
 
 export class VoiceServiceFactory {
   private static instances = new Map<string, VoiceServiceAdapter>();
@@ -13,12 +15,18 @@ export class VoiceServiceFactory {
       case 'openai':
         return new OpenAIRealtimeAdapter(apiKey);
 
+      case 'openai-whisper':
+        return new OpenAIWhisperAdapter(apiKey);
+
       case 'elevenlabs':
         return new ElevenLabsAdapter(apiKey);
 
       case 'webspeech':
         // Web Speech API doesn't need API key
         return new WebSpeechAdapter();
+
+      case 'gemini':
+        return new GeminiLiveAdapter(apiKey);
 
       default:
         throw new Error(`Unsupported voice provider: ${provider}`);
@@ -40,6 +48,7 @@ export class VoiceServiceFactory {
   private static getApiKey(provider: VoiceProvider): string {
     switch (provider) {
       case 'openai':
+      case 'openai-whisper':
         const openaiKey = process.env.OPENAI_API_KEY;
         if (!openaiKey) {
           throw new Error('OPENAI_API_KEY not configured');
@@ -52,6 +61,13 @@ export class VoiceServiceFactory {
           throw new Error('ELEVENLABS_API_KEY not configured');
         }
         return elevenlabsKey;
+
+      case 'gemini':
+        const geminiKey = process.env.GEMINI_API_KEY;
+        if (!geminiKey) {
+          throw new Error('GEMINI_API_KEY not configured');
+        }
+        return geminiKey;
 
       case 'webspeech':
         return ''; // No API key needed
@@ -74,7 +90,7 @@ export class VoiceServiceFactory {
   }
 
   static getAvailableProviders(): VoiceProvider[] {
-    const providers: VoiceProvider[] = ['openai', 'elevenlabs', 'webspeech'];
+    const providers: VoiceProvider[] = ['openai', 'openai-whisper', 'elevenlabs', 'webspeech', 'gemini'];
     return providers.filter(p => this.isProviderAvailable(p));
   }
 }

@@ -13,7 +13,7 @@ export async function handleVoiceStart(
 ) {
   try {
     const { provider, config } = event.payload;
-    const sessionId = getSocketSession(socket.id);
+    const sessionId = await getSocketSession(socket.id);
 
     console.log(`Starting voice session with ${provider} for socket ${socket.id}`);
 
@@ -143,6 +143,26 @@ export async function handleVoiceAudio(
     }
   } catch (error) {
     console.error('Error processing voice audio:', error);
+  }
+}
+
+export async function handleVoiceTranscript(
+  socket: Socket,
+  event: Extract<ClientEvent, { type: 'voice.transcript' }>
+) {
+  try {
+    const voiceSessionId = activeVoiceSessions.get(socket.id);
+    if (!voiceSessionId) {
+      console.warn('No active voice session for transcript');
+      return;
+    }
+
+    const adapter = VoiceServiceFactory.getAdapter(voiceSessionId);
+    if (adapter && 'handleUserTranscript' in adapter) {
+      await (adapter as any).handleUserTranscript(voiceSessionId, event.payload.text, event.payload.isFinal);
+    }
+  } catch (error) {
+    console.error('Error processing voice transcript:', error);
   }
 }
 

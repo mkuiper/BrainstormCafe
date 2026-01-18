@@ -1,30 +1,34 @@
 'use client';
 
 import { Mic, MicOff, StopCircle, AlertCircle } from 'lucide-react';
-import { useVoiceSession } from '@/hooks/useVoiceSession';
+import { VoiceSessionHook } from '@/hooks/useVoiceSession';
 import { VoiceProvider } from '@brainstorm-cafe/shared';
 import { useState, useEffect, useRef } from 'react';
 import { WebSpeechClient } from '@/lib/webSpeechClient';
 
 interface VoiceControlProps {
   provider: VoiceProvider;
+  geminiVoice: string;
+  voiceSession: VoiceSessionHook;
 }
 
-export default function VoiceControl({ provider }: VoiceControlProps) {
-  const { isActive, startSession, stopSession, interrupt, sendAudio } = useVoiceSession();
+export default function VoiceControl({ provider, geminiVoice, voiceSession }: VoiceControlProps) {
+  const { isActive, startSession, stopSession, interrupt, sendAudio, addTranscript } = voiceSession;
   const [isRecording, setIsRecording] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const webSpeechClientRef = useRef<WebSpeechClient | null>(null);
+  const geminiStreamRef = useRef<MediaStream | null>(null);
+  const geminiInputContextRef = useRef<AudioContext | null>(null);
+  const geminiProcessorRef = useRef<ScriptProcessorNode | null>(null);
+  const geminiSourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
 
   useEffect(() => {
-    // Initialize Web Speech client for browser
     if (typeof window !== 'undefined') {
       webSpeechClientRef.current = new WebSpeechClient();
     }
 
-    // Cleanup on unmount
     return () => {
       if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
         mediaRecorderRef.current.stop();
@@ -32,8 +36,66 @@ export default function VoiceControl({ provider }: VoiceControlProps) {
       if (webSpeechClientRef.current) {
         webSpeechClientRef.current.stop();
       }
+      if (geminiStreamRef.current) {
+        geminiStreamRef.current.getTracks().forEach((track) => track.stop());
+        geminiStreamRef.current = null;
+      }
+      if (geminiProcessorRef.current) {
+        geminiProcessorRef.current.disconnect();
+        geminiProcessorRef.current = null;
+      }
+      if (geminiSourceRef.current) {
+        geminiSourceRef.current.disconnect();
+        geminiSourceRef.current = null;
+      }
+      if (geminiInputContextRef.current) {
+        geminiInputContextRef.current.close().catch(() => undefined);
+        geminiInputContextRef.current = null;
+      }
     };
   }, []);
+
+  const startGeminiInput = async () => {
+    const inputCtx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
+    geminiInputContextRef.current = inputCtx;
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    geminiStreamRef.current = stream;
+    const source = inputCtx.createMediaStreamSource(stream);
+    geminiSourceRef.current = source;
+    const processor = inputCtx.createScriptProcessor(4096, 1, 1);
+    geminiProcessorRef.current = processor;
+
+    processor.onaudioprocess = (event) => {
+      const input = event.inputBuffer.getChannelData(0);
+      const int16 = new Int16Array(input.length);
+      for (let i = 0; i < input.length; i++) {
+        int16[i] = Math.max(-1, Math.min(1, input[i])) * 32768;
+      }
+      sendAudio(int16.buffer);
+    };
+
+    source.connect(processor);
+    processor.connect(inputCtx.destination);
+  };
+
+  const stopGeminiInput = () => {
+    if (geminiStreamRef.current) {
+      geminiStreamRef.current.getTracks().forEach((track) => track.stop());
+      geminiStreamRef.current = null;
+    }
+    if (geminiProcessorRef.current) {
+      geminiProcessorRef.current.disconnect();
+      geminiProcessorRef.current = null;
+    }
+    if (geminiSourceRef.current) {
+      geminiSourceRef.current.disconnect();
+      geminiSourceRef.current = null;
+    }
+    if (geminiInputContextRef.current) {
+      geminiInputContextRef.current.close().catch(() => undefined);
+      geminiInputContextRef.current = null;
+    }
+  };
 
   const handleStartSession = async () => {
     try {
@@ -46,22 +108,24 @@ export default function VoiceControl({ provider }: VoiceControlProps) {
           throw new Error('Web Speech API not supported in this browser. Try Chrome, Edge, or Safari.');
         }
 
-        // Set up transcript callback to send via WebSocket
+        // Set up transcript callback to update UI and send to server
         client.onTranscript((text, isFinal) => {
-          console.log(`[VoiceControl] Transcript (${isFinal ? 'final' : 'interim'}):`, text);
+          if (!text || !text.trim()) {
+            return;
+          }
 
-          // Send transcript to server via WebSocket so it broadcasts back
-          // This allows it to be stored and displayed
-          if (text && text.trim()) {
-            // Create a custom event to send transcript
-            console.log('[VoiceControl] Dispatching webspeech-transcript event');
-            const transcriptEvent = new CustomEvent('webspeech-transcript', {
-              detail: { text, isFinal, speaker: 'user' }
-            });
-            window.dispatchEvent(transcriptEvent);
-            console.log('[VoiceControl] Event dispatched');
+          // Update local UI
+          addTranscript('user', text, isFinal);
+
+          // Send to server for AI processing
+          voiceSession.sendTranscript(text, isFinal);
+        });
+
+        client.onError((errorMessage) => {
+          if (errorMessage === 'network') {
+            setError('Web Speech API network error. Try Chrome/Edge, check connectivity, or disable VPN/proxy.');
           } else {
-            console.log('[VoiceControl] Skipping empty transcript');
+            setError(`Web Speech API error: ${errorMessage}`);
           }
         });
 
@@ -71,14 +135,28 @@ export default function VoiceControl({ provider }: VoiceControlProps) {
         return;
       }
 
-      // For OpenAI/ElevenLabs, use microphone streaming
+      if (provider === 'gemini') {
+        startSession(provider, { provider, settings: { voiceId: geminiVoice } });
+        await startGeminiInput();
+        setIsRecording(true);
+        return;
+      }
+
+      // For OpenAI/ElevenLabs, use MediaRecorder streaming
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
       // Start voice session
       startSession(provider);
 
       // Set up audio recording
-      const mediaRecorder = new MediaRecorder(stream);
+      const recorderOptions: MediaRecorderOptions = {};
+      if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+        recorderOptions.mimeType = 'audio/webm;codecs=opus';
+      } else if (MediaRecorder.isTypeSupported('audio/webm')) {
+        recorderOptions.mimeType = 'audio/webm';
+      }
+
+      const mediaRecorder = new MediaRecorder(stream, recorderOptions);
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
 
@@ -98,8 +176,9 @@ export default function VoiceControl({ provider }: VoiceControlProps) {
         setIsRecording(false);
       };
 
-      // Start recording in chunks (100ms)
-      mediaRecorder.start(100);
+      const chunkMs = provider === 'openai-whisper' ? 2000 : 100;
+      // Start recording in chunks
+      mediaRecorder.start(chunkMs);
       setIsRecording(true);
     } catch (err) {
       console.error('Error starting voice session:', err);
@@ -111,6 +190,8 @@ export default function VoiceControl({ provider }: VoiceControlProps) {
     if (provider === 'webspeech' && webSpeechClientRef.current) {
       webSpeechClientRef.current.stop();
       setIsRecording(false);
+    } else if (provider === 'gemini') {
+      stopGeminiInput();
     } else if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.stop();
     }
@@ -175,7 +256,7 @@ export default function VoiceControl({ provider }: VoiceControlProps) {
 
       {/* Provider Info */}
       <div className="text-center text-xs text-muted-foreground">
-        Using {provider === 'openai' ? 'OpenAI Realtime API' : provider === 'elevenlabs' ? 'ElevenLabs' : 'Web Speech API'}
+        Using {provider === 'openai' ? 'OpenAI Realtime API' : provider === 'openai-whisper' ? 'OpenAI Whisper' : provider === 'elevenlabs' ? 'ElevenLabs' : provider === 'gemini' ? 'Google Gemini 2.5 Live' : 'Web Speech API'}
       </div>
     </div>
   );

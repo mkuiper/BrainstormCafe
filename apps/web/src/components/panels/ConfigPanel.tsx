@@ -1,12 +1,22 @@
 'use client';
 
-import { useState } from 'react';
 import VoiceServiceSelector from '../voice/VoiceServiceSelector';
+import GeminiVoiceSelector, { GeminiVoiceName } from '../voice/GeminiVoiceSelector';
 import { VoiceProvider } from '@brainstorm-cafe/shared';
 
-export default function ConfigPanel() {
-  const [selectedProvider, setSelectedProvider] = useState<VoiceProvider>('webspeech');
+interface ConfigPanelProps {
+  selectedProvider: VoiceProvider;
+  onProviderChange: (provider: VoiceProvider) => void;
+  selectedGeminiVoice: GeminiVoiceName;
+  onGeminiVoiceChange: (voice: GeminiVoiceName) => void;
+}
 
+export default function ConfigPanel({
+  selectedProvider,
+  onProviderChange,
+  selectedGeminiVoice,
+  onGeminiVoiceChange,
+}: ConfigPanelProps) {
   return (
     <div className="flex h-full flex-col">
       <div className="border-b border-border p-4">
@@ -18,9 +28,12 @@ export default function ConfigPanel() {
           <div>
             <VoiceServiceSelector
               selected={selectedProvider}
-              onChange={setSelectedProvider}
+              onChange={onProviderChange}
             />
           </div>
+          {selectedProvider === 'gemini' && (
+            <GeminiVoiceSelector selected={selectedGeminiVoice} onChange={onGeminiVoiceChange} />
+          )}
 
           {/* AI Model Section */}
           <div>
@@ -41,10 +54,4 @@ export default function ConfigPanel() {
       </div>
     </div>
   );
-}
-
-// Export the selected provider for use in DiscussionPanel
-export function useConfigStore() {
-  const [selectedProvider, setSelectedProvider] = useState<VoiceProvider>('webspeech');
-  return { selectedProvider, setSelectedProvider };
 }

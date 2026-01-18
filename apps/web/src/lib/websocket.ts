@@ -4,6 +4,7 @@ import { ClientEvent, ServerEvent } from '@brainstorm-cafe/shared';
 class WebSocketClient {
   private socket: Socket | null = null;
   private listeners: Map<string, Set<(event: ServerEvent) => void>> = new Map();
+  private pendingEvents: ClientEvent[] = [];
 
   connect(url: string): void {
     if (this.socket?.connected) {
@@ -20,6 +21,10 @@ class WebSocketClient {
 
     this.socket.on('connect', () => {
       console.log('WebSocket connected');
+      if (this.pendingEvents.length > 0) {
+        this.pendingEvents.forEach((event) => this.socket?.emit('message', event));
+        this.pendingEvents = [];
+      }
     });
 
     this.socket.on('disconnect', () => {
@@ -44,7 +49,7 @@ class WebSocketClient {
 
   send(event: ClientEvent): void {
     if (!this.socket?.connected) {
-      console.error('Cannot send event: WebSocket not connected');
+      this.pendingEvents.push(event);
       return;
     }
 

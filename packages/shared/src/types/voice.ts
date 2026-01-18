@@ -1,4 +1,4 @@
-export type VoiceProvider = 'openai' | 'elevenlabs' | 'webspeech';
+export type VoiceProvider = 'openai' | 'openai-whisper' | 'elevenlabs' | 'webspeech' | 'gemini';
 
 export interface VoiceConfig {
   provider: VoiceProvider;

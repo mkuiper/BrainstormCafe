@@ -3,6 +3,7 @@ import { ClientEvent, ServerEvent } from '@brainstorm-cafe/shared';
 import { documentService } from '../../services/documents/DocumentService';
 import { versionService } from '../../services/documents/VersionService';
 import { diffService } from '../../services/documents/DiffService';
+import { prisma } from '../../db/client';
 
 // Store active sessions (in production, use Redis)
 const activeSessions = new Map<string, string>(); // socketId -> sessionId
@@ -11,15 +12,18 @@ export function setSocketSession(socketId: string, sessionId: string) {
   activeSessions.set(socketId, sessionId);
 }
 
-export function getSocketSession(socketId: string): string {
-  // For now, return a default session or create one
+export async function getSocketSession(socketId: string): Promise<string> {
+  // Check if we already have a session for this socket
   const existing = activeSessions.get(socketId);
   if (existing) return existing;
 
-  // Create a default session ID (in production, this would be managed properly)
-  const sessionId = `session_${socketId}`;
-  activeSessions.set(socketId, sessionId);
-  return sessionId;
+  // Create a new database Session
+  const session = await prisma.session.create({
+    data: {},
+  });
+
+  activeSessions.set(socketId, session.id);
+  return session.id;
 }
 
 export async function handleDocumentCreate(
@@ -27,7 +31,7 @@ export async function handleDocumentCreate(
   event: Extract<ClientEvent, { type: 'document.create' }>
 ) {
   try {
-    const sessionId = getSocketSession(socket.id);
+    const sessionId = await getSocketSession(socket.id);
 
     const document = await documentService.create(sessionId, {
       title: event.payload.title,

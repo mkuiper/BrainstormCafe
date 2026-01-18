@@ -1,7 +1,7 @@
 'use client';
 
 import { VoiceProvider } from '@brainstorm-cafe/shared';
-import { Headphones, Mic, Globe } from 'lucide-react';
+import { Headphones, Mic, Globe, AudioWaveform } from 'lucide-react';
 
 interface VoiceServiceSelectorProps {
   selected: VoiceProvider;
@@ -15,7 +15,25 @@ export default function VoiceServiceSelector({ selected, onChange }: VoiceServic
     description: string;
     icon: React.ReactNode;
     features: string[];
+    recommended?: boolean;
+    badge?: string;
   }> = [
+    {
+      id: 'gemini',
+      name: 'Google Gemini 2.5 Live',
+      description: 'Ultra-low latency, native multimodal streaming',
+      icon: <AudioWaveform className="h-5 w-5" />,
+      features: ['Sub-600ms Latency', 'Native Barge-in', 'Gemini 2.5 Flash'],
+      recommended: true,
+      badge: 'NEW',
+    },
+    {
+      id: 'openai-whisper',
+      name: 'OpenAI Whisper',
+      description: 'Reliable server-side transcription',
+      icon: <AudioWaveform className="h-5 w-5" />,
+      features: ['Reliable', 'Server Processing', 'Whisper Model'],
+    },
     {
       id: 'openai',
       name: 'OpenAI Realtime API',
@@ -33,9 +51,10 @@ export default function VoiceServiceSelector({ selected, onChange }: VoiceServic
     {
       id: 'webspeech',
       name: 'Web Speech API',
-      description: 'Browser-native, free, no API keys needed',
+      description: 'Browser-native, free (may be unreliable)',
       icon: <Globe className="h-5 w-5" />,
-      features: ['Free', 'No Setup', 'Works Offline'],
+      features: ['Free', 'No Setup', 'Chrome/Edge Only'],
+      badge: 'EXPERIMENTAL',
     },
   ];
 
@@ -58,7 +77,20 @@ export default function VoiceServiceSelector({ selected, onChange }: VoiceServic
                 {provider.icon}
               </div>
               <div className="flex-1">
-                <div className="font-medium">{provider.name}</div>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">{provider.name}</span>
+                  {provider.badge && (
+                    <span className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${
+                      provider.badge === 'NEW'
+                        ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
+                        : provider.recommended
+                        ? 'bg-green-500/10 text-green-600 dark:text-green-400'
+                        : 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400'
+                    }`}>
+                      {provider.badge}
+                    </span>
+                  )}
+                </div>
                 <div className="mt-1 text-xs text-muted-foreground">{provider.description}</div>
                 <div className="mt-2 flex flex-wrap gap-1">
                   {provider.features.map((feature) => (
