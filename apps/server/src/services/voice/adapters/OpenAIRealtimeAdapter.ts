@@ -44,12 +44,17 @@ export class OpenAIRealtimeAdapter implements VoiceServiceAdapter {
           this.session.status = 'active';
         }
 
+        const persona = config.settings?.persona;
+        const personaLine = persona
+          ? `Tone: ${persona.tone}. Depth: ${persona.depth}. Mode: ${persona.mode}.`
+          : 'Tone: balanced. Depth: standard. Mode: hybrid.';
+
         // Send session configuration
         this.ws?.send(JSON.stringify({
           type: 'session.update',
           session: {
             modalities: ['text', 'audio'],
-            instructions: 'You are a helpful AI assistant in a brainstorming session. Be concise and creative.',
+            instructions: `You are a helpful AI assistant in a brainstorming session. Be concise and creative. ${personaLine}`,
             voice: 'alloy',
             input_audio_format: 'pcm16',
             output_audio_format: 'pcm16',

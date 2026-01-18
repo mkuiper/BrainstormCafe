@@ -101,6 +101,12 @@ export default function VoiceControl({ provider, geminiVoice, persona, voiceSess
   const handleStartSession = async () => {
     try {
       setError(null);
+      const baseConfig = {
+        provider,
+        settings: {
+          persona,
+        },
+      };
 
       // For Web Speech API, use browser-native implementation
       if (provider === 'webspeech') {
@@ -132,12 +138,15 @@ export default function VoiceControl({ provider, geminiVoice, persona, voiceSess
 
         await client.start();
         setIsRecording(true);
-        startSession(provider); // Notify server
+        startSession(provider, baseConfig); // Notify server
         return;
       }
 
       if (provider === 'gemini') {
-        startSession(provider, { provider, settings: { voiceId: geminiVoice, persona } });
+        startSession(provider, {
+          ...baseConfig,
+          settings: { ...baseConfig.settings, voiceId: geminiVoice },
+        });
         await startGeminiInput();
         setIsRecording(true);
         return;
@@ -147,7 +156,7 @@ export default function VoiceControl({ provider, geminiVoice, persona, voiceSess
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
       // Start voice session
-      startSession(provider);
+      startSession(provider, baseConfig);
 
       // Set up audio recording
       const recorderOptions: MediaRecorderOptions = {};

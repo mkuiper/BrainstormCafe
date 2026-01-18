@@ -91,7 +91,10 @@ export class WebSpeechAdapter implements VoiceServiceAdapter {
     // If it's a final transcript, trigger AI response
     if (isFinal) {
       try {
-        const responseText = await aiService.generateResponse(sessionId);
+        const responseText = await aiService.generateResponse(
+          sessionId,
+          this.session?.config.settings?.persona
+        );
 
         if (this.transcriptCallback) {
           this.transcriptCallback(responseText, true, 'agent');

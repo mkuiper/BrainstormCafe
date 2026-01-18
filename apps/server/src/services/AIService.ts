@@ -1,4 +1,5 @@
 import OpenAI from 'openai';
+import { PersonaSettings } from '@brainstorm-cafe/shared';
 import { transcriptService } from './voice/TranscriptService';
 
 export class AIService {
@@ -12,7 +13,7 @@ export class AIService {
     this.openai = new OpenAI({ apiKey });
   }
 
-  async generateResponse(sessionId: string): Promise<string> {
+  async generateResponse(sessionId: string, persona?: PersonaSettings): Promise<string> {
     // Get recent transcripts for context
     const history = await transcriptService.getRecentTranscripts(sessionId, 10);
     
@@ -21,10 +22,14 @@ export class AIService {
       content: entry.text,
     }));
 
+    const personaLine = persona
+      ? `Tone: ${persona.tone}. Depth: ${persona.depth}. Mode: ${persona.mode}.`
+      : 'Tone: balanced. Depth: standard. Mode: hybrid.';
+
     // Add system message
     messages.unshift({
       role: 'system',
-      content: 'You are a helpful AI assistant in a brainstorming session called BrainStorm Cafe. Be concise, creative, and conversational. Your responses will be spoken aloud, so keep them natural and brief.',
+      content: `You are a helpful AI assistant in a brainstorming session called BrainStorm Cafe. Be concise, creative, and conversational. Your responses will be spoken aloud, so keep them natural and brief. ${personaLine}`,
     });
 
     const response = await this.openai.chat.completions.create({
