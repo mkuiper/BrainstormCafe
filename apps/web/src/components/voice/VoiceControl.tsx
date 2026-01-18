@@ -46,10 +46,23 @@ export default function VoiceControl({ provider }: VoiceControlProps) {
           throw new Error('Web Speech API not supported in this browser. Try Chrome, Edge, or Safari.');
         }
 
-        // Set up transcript callback
+        // Set up transcript callback to send via WebSocket
         client.onTranscript((text, isFinal) => {
-          // Send transcript to server for storage
-          console.log(`Transcript (${isFinal ? 'final' : 'interim'}):`, text);
+          console.log(`[VoiceControl] Transcript (${isFinal ? 'final' : 'interim'}):`, text);
+
+          // Send transcript to server via WebSocket so it broadcasts back
+          // This allows it to be stored and displayed
+          if (text && text.trim()) {
+            // Create a custom event to send transcript
+            console.log('[VoiceControl] Dispatching webspeech-transcript event');
+            const transcriptEvent = new CustomEvent('webspeech-transcript', {
+              detail: { text, isFinal, speaker: 'user' }
+            });
+            window.dispatchEvent(transcriptEvent);
+            console.log('[VoiceControl] Event dispatched');
+          } else {
+            console.log('[VoiceControl] Skipping empty transcript');
+          }
         });
 
         await client.start();

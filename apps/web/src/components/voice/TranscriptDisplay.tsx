@@ -13,6 +13,10 @@ export default function TranscriptDisplay({ transcripts }: TranscriptDisplayProp
 
   // Auto-scroll to bottom when new transcripts arrive
   useEffect(() => {
+    console.log('[TranscriptDisplay] Transcripts updated, count:', transcripts.length);
+    if (transcripts.length > 0) {
+      console.log('[TranscriptDisplay] Latest:', transcripts[transcripts.length - 1]);
+    }
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [transcripts]);
 

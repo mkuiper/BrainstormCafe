@@ -59,6 +59,45 @@ export function useVoiceSession(): VoiceSessionHook {
     }
   });
 
+  // Listen for Web Speech API transcripts (browser-native)
+  useEffect(() => {
+    console.log('[useVoiceSession] Setting up webspeech-transcript listener');
+
+    const handleWebSpeechTranscript = (event: any) => {
+      console.log('[useVoiceSession] Received webspeech-transcript event:', event.detail);
+      const { text, isFinal, speaker } = event.detail;
+
+      const newEntry: TranscriptEntry = {
+        id: `${Date.now()}_${Math.random()}`,
+        sessionId: 'current',
+        speaker,
+        text,
+        isFinal,
+        timestamp: new Date(),
+      };
+
+      console.log('[useVoiceSession] Adding transcript entry:', newEntry);
+      setTranscripts((prev) => {
+        // If not final, replace the last non-final entry from the same speaker
+        if (!isFinal) {
+          const lastIndex = prev.length - 1;
+          if (lastIndex >= 0 && !prev[lastIndex].isFinal && prev[lastIndex].speaker === speaker) {
+            console.log('[useVoiceSession] Replacing interim transcript');
+            return [...prev.slice(0, lastIndex), newEntry];
+          }
+        }
+        console.log('[useVoiceSession] Adding new transcript, total:', prev.length + 1);
+        return [...prev, newEntry];
+      });
+    };
+
+    window.addEventListener('webspeech-transcript', handleWebSpeechTranscript);
+    return () => {
+      console.log('[useVoiceSession] Removing webspeech-transcript listener');
+      window.removeEventListener('webspeech-transcript', handleWebSpeechTranscript);
+    };
+  }, []);
+
   const startSession = useCallback(
     (provider: VoiceProvider, config?: VoiceConfig) => {
       const voiceConfig: VoiceConfig = config || {

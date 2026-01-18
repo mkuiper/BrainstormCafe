@@ -22,7 +22,7 @@ export class VersionService {
         version: nextVersion,
         content,
         trigger,
-        metadata: metadata || {},
+        metadata: metadata as any || {},
       },
     });
 

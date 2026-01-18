@@ -29,23 +29,30 @@ export class WebSpeechClient {
     this.recognition.lang = 'en-US';
 
     this.recognition.onresult = (event: any) => {
+      console.log('[WebSpeechClient] onresult fired, results:', event.results.length);
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const transcript = event.results[i][0].transcript;
         const isFinal = event.results[i].isFinal;
+        console.log('[WebSpeechClient] Transcript:', transcript, 'isFinal:', isFinal);
 
         if (this.onTranscriptCallback) {
+          console.log('[WebSpeechClient] Calling transcript callback');
           this.onTranscriptCallback(transcript, isFinal);
+        } else {
+          console.warn('[WebSpeechClient] No transcript callback set!');
         }
       }
     };
 
     this.recognition.onerror = (event: any) => {
-      console.error('Speech recognition error:', event.error);
+      console.error('[WebSpeechClient] Speech recognition error:', event.error);
     };
 
     this.recognition.onend = () => {
+      console.log('[WebSpeechClient] Recognition ended, isListening:', this.isListening);
       // Restart if still supposed to be listening
       if (this.isListening) {
+        console.log('[WebSpeechClient] Restarting recognition...');
         this.recognition.start();
       }
     };
@@ -58,12 +65,27 @@ export class WebSpeechClient {
         return;
       }
 
+      // Don't start if already listening
+      if (this.isListening) {
+        resolve();
+        return;
+      }
+
       try {
         this.isListening = true;
+        console.log('[WebSpeechClient] Starting recognition...');
         this.recognition.start();
+        console.log('[WebSpeechClient] Recognition started successfully');
         resolve();
       } catch (error) {
-        reject(error);
+        console.error('[WebSpeechClient] Error starting recognition:', error);
+        // If already started, just resolve
+        if ((error as any).message?.includes('already started')) {
+          console.log('[WebSpeechClient] Recognition already started, continuing...');
+          resolve();
+        } else {
+          reject(error);
+        }
       }
     });
   }

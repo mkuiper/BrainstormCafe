@@ -7,7 +7,7 @@ import { useVoiceSession } from '@/hooks/useVoiceSession';
 import { VoiceProvider } from '@brainstorm-cafe/shared';
 
 export default function DiscussionPanel() {
-  // For now, default to Web Speech API (free, no setup)
+  // Using Web Speech API (browser-native, works immediately)
   const [selectedProvider] = useState<VoiceProvider>('webspeech');
   const { transcripts } = useVoiceSession();
 
