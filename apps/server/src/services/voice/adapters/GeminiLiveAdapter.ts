@@ -203,22 +203,20 @@ export class GeminiLiveAdapter implements VoiceServiceAdapter {
         // Handle text transcripts
         if (content.outputTranscription?.text && this.transcriptCallback) {
           const isFinal = content.turnComplete || false;
+          console.log(`[Gemini] Agent transcript: "${content.outputTranscription.text.substring(0, 50)}..." isFinal=${isFinal} turnComplete=${content.turnComplete}`);
           this.transcriptCallback(content.outputTranscription.text, isFinal, 'agent');
         }
 
         if (content.inputTranscription?.text && this.transcriptCallback) {
           const isFinal = content.turnComplete || false;
+          console.log(`[Gemini] User transcript: "${content.inputTranscription.text.substring(0, 50)}..." isFinal=${isFinal} turnComplete=${content.turnComplete}`);
           this.transcriptCallback(content.inputTranscription.text, isFinal, 'user');
         }
 
-        // Handle model turn parts (audio + optional text)
+        // Handle model turn parts (audio only - transcripts handled above)
         if (content.modelTurn?.parts) {
           for (const part of content.modelTurn.parts) {
-            if (part.text && this.transcriptCallback) {
-              const isFinal = content.turnComplete || false;
-              this.transcriptCallback(part.text, isFinal, 'agent');
-            }
-
+            // Only handle audio - transcripts are handled via outputTranscription
             if (part.inlineData?.data && this.audioCallback) {
               const audioData = Buffer.from(part.inlineData.data, 'base64');
               const audioSlice = audioData.buffer.slice(

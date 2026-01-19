@@ -216,8 +216,10 @@ model DocumentVersion {
 
 - [x] **Voice Service Adapters** - Multi-provider abstraction
   - **OpenAIRealtimeAdapter** - Native interruption, low latency
+  - **OpenAIWhisperAdapter** - High-accuracy transcription with 2-second flush timer
   - **ElevenLabsAdapter** - Superior voice quality
   - **WebSpeechAdapter** - Browser-native, free, no API keys
+  - **GeminiLiveAdapter** - Sub-600ms latency, native multimodal streaming with Gemini 2.5 Flash
 
 - [x] **VoiceServiceFactory** - Provider selection
   - Create adapters based on provider
@@ -252,11 +254,23 @@ model DocumentVersion {
   - Error handling with user-friendly messages
 
 - [x] **VoiceServiceSelector** - Provider selection UI
-  - Three provider cards (OpenAI, ElevenLabs, WebSpeech)
+  - Five provider cards (Gemini, OpenAI Realtime, OpenAI Whisper, ElevenLabs, WebSpeech)
   - Provider descriptions and features
   - Visual selection state
-  - Feature badges
+  - Feature badges (NEW, EXPERIMENTAL)
   - Icons for each provider
+
+- [x] **PersonaSelector** - AI behavior customization
+  - Tone selection (casual, balanced, formal)
+  - Depth selection (brief, standard, exhaustive)
+  - Mode selection (analytical, hybrid, lateral)
+  - Horizontal button group layout
+  - Applies to Gemini, OpenAI Realtime, and WebSpeech providers
+
+- [x] **GeminiVoiceSelector** - Voice selection for Gemini
+  - Five voice options (Puck, Charon, Kore, Fenrir, Zephyr)
+  - Voice descriptions
+  - Selection state management
 
 - [x] **TranscriptDisplay** - Real-time conversation
   - User and agent messages
@@ -276,10 +290,28 @@ model DocumentVersion {
 
 #### Voice Provider Features
 
+**Google Gemini 2.5 Live:** ⭐ NEW
+- Sub-600ms latency (fastest available)
+- Native multimodal streaming
+- Native barge-in/interruption
+- Five voice options (Puck, Charon, Kore, Fenrir, Zephyr)
+- PCM audio (16kHz input, 24kHz output)
+- Integrated transcription
+- Persona-aware responses
+- Requires GEMINI_API_KEY
+
 **OpenAI Realtime API:**
 - Native interruption support
 - Low latency (<1s)
 - Unified LLM + voice processing
+- Persona-aware responses
+- Requires OPENAI_API_KEY
+
+**OpenAI Whisper:**
+- High-accuracy speech-to-text
+- Streaming transcription with 2-second flush timer
+- Handles partial audio gracefully
+- Text-to-speech via OpenAI TTS
 - Requires OPENAI_API_KEY
 
 **ElevenLabs Conversational AI:**
@@ -288,12 +320,14 @@ model DocumentVersion {
 - Natural intonation
 - Requires ELEVENLABS_API_KEY
 
-**Web Speech API:**
+**Web Speech API:** 🧪 EXPERIMENTAL
 - Browser-native (Chrome, Edge, Safari)
 - Completely free
 - No API keys required
+- Persona-aware responses
 - Works offline
 - Instant availability
+- May have reliability issues
 
 ### Integration
 
@@ -318,19 +352,26 @@ model DocumentVersion {
 
 ### Files Created (Phase 3)
 
-**Backend (8 files):**
+**Backend (10 files):**
 - `apps/server/src/services/voice/adapters/OpenAIRealtimeAdapter.ts`
+- `apps/server/src/services/voice/adapters/OpenAIWhisperAdapter.ts` ⭐ NEW
+- `apps/server/src/services/voice/adapters/GeminiLiveAdapter.ts` ⭐ NEW
 - `apps/server/src/services/voice/adapters/ElevenLabsAdapter.ts`
 - `apps/server/src/services/voice/adapters/WebSpeechAdapter.ts`
 - `apps/server/src/services/voice/VoiceServiceFactory.ts`
 - `apps/server/src/services/voice/TranscriptService.ts`
+- `apps/server/src/services/AIService.ts` - Persona-aware response generation
 - `apps/server/src/websocket/handlers/voiceHandler.ts`
 
-**Frontend (4 files):**
-- `apps/web/src/hooks/useVoiceSession.ts`
-- `apps/web/src/components/voice/VoiceControl.tsx`
+**Frontend (8 files):**
+- `apps/web/src/hooks/useVoiceSession.ts` - Now includes PCM audio playback
+- `apps/web/src/components/voice/VoiceControl.tsx` - Gemini PCM audio capture
 - `apps/web/src/components/voice/VoiceServiceSelector.tsx`
 - `apps/web/src/components/voice/TranscriptDisplay.tsx`
+- `apps/web/src/components/voice/PersonaSelector.tsx` ⭐ NEW
+- `apps/web/src/components/voice/GeminiVoiceSelector.tsx` ⭐ NEW
+- `apps/web/src/lib/webSpeechClient.ts` - Improved error handling
+- `apps/web/src/lib/websocket.ts`
 
 ### How to Test Phase 3
 
@@ -366,9 +407,40 @@ model DocumentVersion {
    - Microphone access released
    - Session ends
 
+### Recent Enhancements (Jan 2026)
+
+**Gemini 2.5 Live Integration:**
+- Complete WebSocket-based bidirectional streaming
+- PCM audio input (16kHz) and output (24kHz)
+- Model: `gemini-2.5-flash-native-audio-preview-12-2025`
+- Integrated transcription via `input_audio_transcription` and `output_audio_transcription`
+- Five voice options with unique characteristics
+- Native interruption support
+- Persona settings integration
+
+**OpenAI Whisper Integration:**
+- Streaming transcription with intelligent audio buffering
+- 2-second flush timer to prevent transcript cutoff
+- Automatic flush on session end
+- Handles partial audio chunks gracefully
+- Significantly improved transcription accuracy
+
+**Persona System:**
+- Three dimensions: Tone (casual/balanced/formal), Depth (brief/standard/exhaustive), Mode (analytical/hybrid/lateral)
+- Affects Gemini, OpenAI Realtime, and WebSpeech responses
+- System prompt injection with persona characteristics
+- UI controls in ConfigPanel
+
+**Bug Fixes:**
+- Fixed Gemini transcript overwriting issue (removed duplicate transcript callbacks)
+- Fixed Whisper transcript cutoff (added flush timer)
+- Fixed Web Speech API reliability (improved error handling, auto-restart)
+- Fixed database foreign key constraints (Session records now created properly)
+- Added debug logging for transcript flow analysis
+
 ### Current Progress
 
-**35% Complete** (3 of 9 phases done)
+**40% Complete** (3 of 9 phases done, with enhancements)
 
 - ✅ Phase 1: Foundation (10%)
 - ✅ Phase 2: Documents (10%)

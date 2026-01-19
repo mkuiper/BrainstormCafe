@@ -4,7 +4,9 @@ An AI-powered brainstorming workspace with interactive voice mode, real-time doc
 
 ## Features
 
-- **Multi-Provider Voice Integration**: Choose between OpenAI Realtime API, ElevenLabs Conversational AI, or Web Speech API
+- **Multi-Provider Voice Integration**: Choose between Google Gemini 2.5 Live, OpenAI Realtime/Whisper, ElevenLabs, or Web Speech API
+- **Ultra-Low Latency Voice**: Sub-600ms response time with Gemini 2.5 Live
+- **Persona Customization**: Adjust AI tone, depth, and mode for tailored responses
 - **Real-time Document Collaboration**: Live markdown editing with automatic version control
 - **Multi-Agent System**: Discussion, Document, and Research agents working together
 - **Model-Agnostic AI**: Switch between OpenAI GPT-4, Claude, and other models seamlessly
@@ -136,8 +138,12 @@ Required:
 - `REDIS_URL`: Redis connection string
 - `OPENAI_API_KEY` or `ANTHROPIC_API_KEY`: At least one AI provider
 
-Optional:
+Optional Voice Providers:
+- `GEMINI_API_KEY`: For Google Gemini 2.5 Live voice service (recommended)
 - `ELEVENLABS_API_KEY`: For ElevenLabs voice service
+- Web Speech API requires no key (browser-native)
+
+Optional:
 - `TAVILY_API_KEY`: For web search in research agents
 
 ## License
