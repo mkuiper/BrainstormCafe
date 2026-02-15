@@ -22,6 +22,8 @@ export interface VoiceSettings {
   voiceId?: string;
   model?: string;
   persona?: PersonaSettings;
+  aiProvider?: string; // AIProvider type - avoiding circular dependency
+  aiModel?: string; // AIModel type - avoiding circular dependency
 }
 
 export interface VoiceSession {

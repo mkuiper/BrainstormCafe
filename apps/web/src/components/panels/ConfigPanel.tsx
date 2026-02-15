@@ -3,7 +3,8 @@
 import VoiceServiceSelector from '../voice/VoiceServiceSelector';
 import GeminiVoiceSelector, { GeminiVoiceName } from '../voice/GeminiVoiceSelector';
 import PersonaSelector from '../voice/PersonaSelector';
-import { PersonaSettings, VoiceProvider } from '@brainstorm-cafe/shared';
+import AIModelSelector from '../voice/AIModelSelector';
+import { PersonaSettings, VoiceProvider, AIProvider, AIModel } from '@brainstorm-cafe/shared';
 
 interface ConfigPanelProps {
   selectedProvider: VoiceProvider;
@@ -12,6 +13,10 @@ interface ConfigPanelProps {
   onGeminiVoiceChange: (voice: GeminiVoiceName) => void;
   persona: PersonaSettings;
   onPersonaChange: (persona: PersonaSettings) => void;
+  selectedAIProvider: AIProvider;
+  onAIProviderChange: (provider: AIProvider) => void;
+  selectedAIModel: AIModel;
+  onAIModelChange: (model: AIModel) => void;
 }
 
 export default function ConfigPanel({
@@ -21,6 +26,10 @@ export default function ConfigPanel({
   onGeminiVoiceChange,
   persona,
   onPersonaChange,
+  selectedAIProvider,
+  onAIProviderChange,
+  selectedAIModel,
+  onAIModelChange,
 }: ConfigPanelProps) {
   return (
     <div className="flex h-full flex-col">
@@ -41,13 +50,17 @@ export default function ConfigPanel({
           )}
           <PersonaSelector value={persona} onChange={onPersonaChange} />
 
-          {/* AI Model Section */}
-          <div>
-            <h3 className="mb-2 text-sm font-medium">AI Model</h3>
-            <div className="rounded-lg border border-border bg-card p-3 text-sm text-muted-foreground">
-              AI model selection will be available in Phase 4
+          {/* AI Model Section - Only for WebSpeech */}
+          {selectedProvider === 'webspeech' && (
+            <div>
+              <AIModelSelector
+                selectedProvider={selectedAIProvider}
+                selectedModel={selectedAIModel}
+                onProviderChange={onAIProviderChange}
+                onModelChange={onAIModelChange}
+              />
             </div>
-          </div>
+          )}
 
           {/* Templates Section */}
           <div>

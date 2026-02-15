@@ -1,8 +1,8 @@
 export type AIProvider = 'openai' | 'anthropic';
 
 export type AIModel =
+  | 'gpt-4o'
   | 'gpt-4-turbo'
-  | 'gpt-4'
   | 'gpt-3.5-turbo'
   | 'claude-opus-4-5'
   | 'claude-sonnet-4-5'
@@ -31,10 +31,20 @@ export interface AICompletionResponse {
   };
 }
 
+export interface AIModelInfo {
+  id: AIModel;
+  name: string;
+  provider: AIProvider;
+  description: string;
+  contextWindow: number;
+  costTier: 'low' | 'medium' | 'high';
+}
+
 export interface AIProviderAdapter {
   complete(request: AICompletionRequest): Promise<AICompletionResponse>;
-  stream(
+  stream?(
     request: AICompletionRequest,
     onChunk: (chunk: string) => void
   ): Promise<AICompletionResponse>;
+  getSupportedModels(): AIModel[];
 }

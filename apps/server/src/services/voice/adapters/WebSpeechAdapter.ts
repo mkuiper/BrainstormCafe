@@ -1,5 +1,5 @@
-import { VoiceServiceAdapter, VoiceConfig, VoiceSession } from '@brainstorm-cafe/shared';
-import { aiService } from '../../AIService';
+import { VoiceServiceAdapter, VoiceConfig, VoiceSession, AIProvider, AIModel } from '@brainstorm-cafe/shared';
+import { aiService } from '../../ai/AIService';
 
 /**
  * WebSpeechAdapter - Browser-based voice recognition and synthesis
@@ -66,6 +66,8 @@ export class WebSpeechAdapter implements VoiceServiceAdapter {
   async endSession(): Promise<void> {
     if (this.session) {
       this.session.status = 'ended';
+      // Clean up AI adapter
+      await aiService.cleanup(this.session.id);
     }
 
     this.transcriptCallback = null;
@@ -91,8 +93,13 @@ export class WebSpeechAdapter implements VoiceServiceAdapter {
     // If it's a final transcript, trigger AI response
     if (isFinal) {
       try {
+        const aiProvider = (this.session?.config.settings?.aiProvider as AIProvider) || 'openai';
+        const aiModel = (this.session?.config.settings?.aiModel as AIModel) || 'gpt-4o';
+
         const responseText = await aiService.generateResponse(
           sessionId,
+          aiProvider,
+          aiModel,
           this.session?.config.settings?.persona
         );
 

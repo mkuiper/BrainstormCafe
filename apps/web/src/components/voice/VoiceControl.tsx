@@ -2,7 +2,7 @@
 
 import { Mic, MicOff, StopCircle, AlertCircle } from 'lucide-react';
 import { VoiceSessionHook } from '@/hooks/useVoiceSession';
-import { PersonaSettings, VoiceProvider } from '@brainstorm-cafe/shared';
+import { PersonaSettings, VoiceProvider, AIProvider, AIModel } from '@brainstorm-cafe/shared';
 import { useState, useEffect, useRef } from 'react';
 import { WebSpeechClient } from '@/lib/webSpeechClient';
 
@@ -11,9 +11,11 @@ interface VoiceControlProps {
   geminiVoice: string;
   persona: PersonaSettings;
   voiceSession: VoiceSessionHook;
+  aiProvider: AIProvider;
+  aiModel: AIModel;
 }
 
-export default function VoiceControl({ provider, geminiVoice, persona, voiceSession }: VoiceControlProps) {
+export default function VoiceControl({ provider, geminiVoice, persona, voiceSession, aiProvider, aiModel }: VoiceControlProps) {
   const { isActive, startSession, stopSession, interrupt, sendAudio, addTranscript } = voiceSession;
   const [isRecording, setIsRecording] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -105,6 +107,10 @@ export default function VoiceControl({ provider, geminiVoice, persona, voiceSess
         provider,
         settings: {
           persona,
+          ...(provider === 'webspeech' && {
+            aiProvider,
+            aiModel,
+          }),
         },
       };
 

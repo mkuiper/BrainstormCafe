@@ -3,7 +3,7 @@
 import VoiceControl from '../voice/VoiceControl';
 import TranscriptDisplay from '../voice/TranscriptDisplay';
 import { VoiceSessionHook } from '@/hooks/useVoiceSession';
-import { PersonaSettings, VoiceProvider } from '@brainstorm-cafe/shared';
+import { PersonaSettings, VoiceProvider, AIProvider, AIModel } from '@brainstorm-cafe/shared';
 import { GeminiVoiceName } from '../voice/GeminiVoiceSelector';
 
 interface DiscussionPanelProps {
@@ -11,9 +11,11 @@ interface DiscussionPanelProps {
   geminiVoice: GeminiVoiceName;
   persona: PersonaSettings;
   voiceSession: VoiceSessionHook;
+  aiProvider: AIProvider;
+  aiModel: AIModel;
 }
 
-export default function DiscussionPanel({ provider, geminiVoice, persona, voiceSession }: DiscussionPanelProps) {
+export default function DiscussionPanel({ provider, geminiVoice, persona, voiceSession, aiProvider, aiModel }: DiscussionPanelProps) {
   return (
     <div className="flex h-full flex-col">
       <div className="border-b border-border p-4">
@@ -32,6 +34,8 @@ export default function DiscussionPanel({ provider, geminiVoice, persona, voiceS
             geminiVoice={geminiVoice}
             persona={persona}
             voiceSession={voiceSession}
+            aiProvider={aiProvider}
+            aiModel={aiModel}
           />
         </div>
 

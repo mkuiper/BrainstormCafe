@@ -6,7 +6,7 @@ import DiscussionPanel from '@/components/panels/DiscussionPanel';
 import DocumentPanel from '@/components/panels/DocumentPanel';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { useVoiceSession } from '@/hooks/useVoiceSession';
-import { PersonaSettings, VoiceProvider } from '@brainstorm-cafe/shared';
+import { PersonaSettings, VoiceProvider, AIProvider, AIModel, getDefaultModel } from '@brainstorm-cafe/shared';
 import { GeminiVoiceName } from '@/components/voice/GeminiVoiceSelector';
 
 export default function Home() {
@@ -19,6 +19,13 @@ export default function Home() {
     depth: 'standard',
     mode: 'hybrid',
   });
+  const [selectedAIProvider, setSelectedAIProvider] = useState<AIProvider>('openai');
+  const [selectedAIModel, setSelectedAIModel] = useState<AIModel>('gpt-4o');
+
+  const handleAIProviderChange = (provider: AIProvider) => {
+    setSelectedAIProvider(provider);
+    setSelectedAIModel(getDefaultModel(provider));
+  };
 
   return (
     <main className="h-screen w-screen overflow-hidden bg-background">
@@ -37,6 +44,10 @@ export default function Home() {
             onGeminiVoiceChange={setSelectedGeminiVoice}
             persona={persona}
             onPersonaChange={setPersona}
+            selectedAIProvider={selectedAIProvider}
+            onAIProviderChange={handleAIProviderChange}
+            selectedAIModel={selectedAIModel}
+            onAIModelChange={setSelectedAIModel}
           />
         </div>
 
@@ -47,6 +58,8 @@ export default function Home() {
             geminiVoice={selectedGeminiVoice}
             persona={persona}
             voiceSession={voiceSession}
+            aiProvider={selectedAIProvider}
+            aiModel={selectedAIModel}
           />
         </div>
 
